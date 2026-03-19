@@ -81,5 +81,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'findfy-new.firebasestorage.app',
     measurementId: 'G-N3YVWMPWEQ',
   );
-
 }
