@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "942469854021",
-    "project_id": "findify-6e6bc",
-    "storage_bucket": "findify-6e6bc.firebasestorage.app"
+    "project_number": "488423086096",
+    "project_id": "findfy-new",
+    "storage_bucket": "findfy-new.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:942469854021:android:2f9bb1007a04986c90442c",
+        "mobilesdk_app_id": "1:488423086096:android:cced938c5083df64049295",
         "android_client_info": {
           "package_name": "com.example.findify"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAEUJ8zoDe0Ug8thswe23E4tCW60fHPtBc"
+          "current_key": "AIzaSyDrGKuA77Mvx0PNktEZPWTSNUN9pES-Iis"
         }
       ],
       "services": {

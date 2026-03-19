@@ -33,10 +33,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -52,22 +49,37 @@ class DefaultFirebaseOptions {
   // ── Web ───────────────────────────────────────────────────────────────────
   // TODO: Replace the values below with your actual Firebase Web app config.
   // Go to: Firebase Console → Project Settings → Your Apps → Add app → Web
-  // Then copy the firebaseConfig values here.
+
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'REPLACE_WITH_YOUR_WEB_API_KEY',
-    appId: 'REPLACE_WITH_YOUR_WEB_APP_ID',
-    messagingSenderId: '942469854021',
-    projectId: 'findify-6e6bc',
-    authDomain: 'findify-6e6bc.firebaseapp.com',
-    storageBucket: 'findify-6e6bc.firebasestorage.app',
+    apiKey: 'AIzaSyD57VughjWhhfyIseQzoZkVdBuXpC68nbE',
+    appId: '1:488423086096:web:048370dde5b7b705049295',
+    messagingSenderId: '488423086096',
+    projectId: 'findfy-new',
+    authDomain: 'findfy-new.firebaseapp.com',
+    storageBucket: 'findfy-new.firebasestorage.app',
+    measurementId: 'G-S87LGRPJ8W',
+  );
+
+  // Then copy the firebaseConfig values here.
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyDrGKuA77Mvx0PNktEZPWTSNUN9pES-Iis',
+    appId: '1:488423086096:android:cced938c5083df64049295',
+    messagingSenderId: '488423086096',
+    projectId: 'findfy-new',
+    storageBucket: 'findfy-new.firebasestorage.app',
   );
 
   // ── Android ───────────────────────────────────────────────────────────────
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAEUJ8zoDe0Ug8thswe23E4tCW60fHPtBc',
-    appId: '1:942469854021:android:2f9bb1007a04986c90442c',
-    messagingSenderId: '942469854021',
-    projectId: 'findify-6e6bc',
-    storageBucket: 'findify-6e6bc.firebasestorage.app',
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyD57VughjWhhfyIseQzoZkVdBuXpC68nbE',
+    appId: '1:488423086096:web:caeb90f33021109d049295',
+    messagingSenderId: '488423086096',
+    projectId: 'findfy-new',
+    authDomain: 'findfy-new.firebaseapp.com',
+    storageBucket: 'findfy-new.firebasestorage.app',
+    measurementId: 'G-N3YVWMPWEQ',
   );
+
 }
