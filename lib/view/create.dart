@@ -13,15 +13,15 @@ class CreatePage extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => CreateController(), // Provide a single instance
       child: Scaffold(
+        backgroundColor: const Color(0xFFF3F4F6),
         appBar: AppBar(
-          centerTitle: true,
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
           title: Text(
             'Create Post',
             style: GoogleFonts.poppins(
-              fontSize: 25, // Set the font size
+              fontSize: 26,
               fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+              color: const Color(0xFFFF7B00),
             ),
           ),
           actions: [
@@ -29,9 +29,9 @@ class CreatePage extends StatelessWidget {
               builder: (context, provider, child) {
                 return provider.isLoading
                     ? const Padding(
-                  padding:  EdgeInsets.all(12.0),
+                  padding: EdgeInsets.all(12.0),
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xffff9d14)),
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF7B00)),
                   ),
                 )
                     : IconButton(
@@ -56,7 +56,7 @@ class CreatePage extends StatelessWidget {
                       );
                     }
                   },
-                  icon: const Icon(Icons.send, size: 30, color: Color(0xffff9d14)),
+                  icon: const Icon(Icons.send_rounded, size: 28, color: Color(0xFFFF7B00)),
                 );
               },
             ),
@@ -72,17 +72,24 @@ class CreatePage extends StatelessWidget {
                   provider.pickImage(context);
                 },
                 child: Container(
-                  width: 80,
-                  height: 80,
+                  width: 70,
+                  height: 70,
                   decoration: BoxDecoration(
-                    color: const Color(0xffff9d14),
-                    borderRadius: BorderRadius.circular(20), // Rounded edges
+                    color: const Color(0xFFFF7B00),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF7B00).withOpacity(0.4),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: const Center(
                     child: Icon(
-                      Icons.add_a_photo,
-                      size: 40,
-                      color: Colors.black,
+                      Icons.add_a_photo_rounded,
+                      size: 32,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -97,51 +104,93 @@ class CreatePage extends StatelessWidget {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                     child: Column(
                       children: [
                         // Caption Input
-                        TextField(
-                          decoration: InputDecoration(
-                            hintText: "Add a Caption...",
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          onChanged: (value) {
-                            provider.caption = value; // Update the caption in the provider
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          decoration: InputDecoration(
-                            hintText: "Add Location...",
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: "What's on your mind?",
+                              hintStyle: GoogleFonts.inter(color: Colors.grey.shade400),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.all(16),
+                            ),
+                            maxLines: 3,
+                            onChanged: (value) {
+                              provider.caption = value;
+                            },
                           ),
-                          onChanged: (value) {
-                            provider.location = value; // Update the location in the provider
-                          },
                         ),
                         const SizedBox(height: 16),
                         Container(
-                          width: 400,
-                          height: 400,
-                          padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              width: 4,
-                              color: Colors.black,
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: "Add Location",
+                              hintStyle: GoogleFonts.inter(color: Colors.grey.shade400),
+                              prefixIcon: const Icon(Icons.location_on_rounded, color: Color(0xFF6B7280)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 16),
                             ),
+                            onChanged: (value) {
+                              provider.location = value;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          width: double.infinity,
+                          height: 300,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 15,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                             image: provider.image == null
                                 ? const DecorationImage(
                               image: AssetImage("images/default_create.jpg"),
-                              fit: BoxFit.contain,
+                              fit: BoxFit.cover,
                             )
                                 : DecorationImage(
                               image: FileImage(File(provider.image!.path).absolute),
-                              fit: BoxFit.contain,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
+                        const SizedBox(height: 80), // Padding for the floating action button
                       ],
                     ),
                   ),

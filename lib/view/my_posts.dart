@@ -36,37 +36,52 @@ class _MyPostsPageState extends State<MyPostsPage> {
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF3F4F6),
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
         title: Text(
           'My Posts',
           style: GoogleFonts.poppins(
-            fontSize: 25,
+            fontSize: 26,
             fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+            color: const Color(0xFFFF7B00),
           ),
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50.0),
+          preferredSize: const Size.fromHeight(60.0),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.trim().toLowerCase();
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Search posts by caption...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
+            padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 12.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.trim().toLowerCase();
+                  });
+                },
+                style: GoogleFonts.inter(fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Search my posts...',
+                  hintStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontWeight: FontWeight.w400),
+                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFFFF7B00)),
+                  filled: false,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),

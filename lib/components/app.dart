@@ -46,56 +46,67 @@ class _AppState extends State<App> {
 
     return Scaffold(
       body: pages[selectedIndex],
-      bottomNavigationBar: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          backgroundColor: Colors.black,
-          indicatorColor: Colors.black, // Optional: subtle highlight for selected item
-          labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
-                (states) {
-              if (states.contains(WidgetState.selected)) {
-                return GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xffe0746e)
-                  // Set the font weight
-                );
-              }
-              return GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white
-              );
-            },
-          ),
-          iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
-                (states) {
-              if (states.contains(WidgetState.selected)) {
-                return const IconThemeData(color: Color(0xffe0746e));
-              }
-              return const IconThemeData(color: Colors.white);
-            },
-          ),
-        ),
-        child: NavigationBar(
-          selectedIndex: selectedIndex,
-          onDestinationSelected: (index) =>
-              setState(() => selectedIndex = index),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(CupertinoIcons.house_fill),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(CupertinoIcons.plus_square_fill_on_square_fill),
-              label: 'Create',
-            ),
-            NavigationDestination(
-                icon: Icon(Icons.collections_bookmark),
-                label: 'My Posts'
-            ),
-            NavigationDestination(
-              icon: Icon(CupertinoIcons.person_crop_square_fill),
-              label: 'Profile',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
             ),
           ],
+        ),
+        child: NavigationBarTheme(
+          data: NavigationBarThemeData(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            indicatorColor: const Color(0xFFFF7B00).withOpacity(0.15),
+            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((
+              states,
+            ) {
+              if (states.contains(WidgetState.selected)) {
+                return GoogleFonts.inter(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: const Color(0xFFFF7B00),
+                );
+              }
+              return GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: const Color(0xFF6B7280),
+              );
+            }),
+            iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const IconThemeData(color: Color(0xFFFF7B00), size: 26);
+              }
+              return const IconThemeData(color: Color(0xFF6B7280), size: 24);
+            }),
+          ),
+          child: NavigationBar(
+            selectedIndex: selectedIndex,
+            onDestinationSelected: (index) =>
+                setState(() => selectedIndex = index),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(CupertinoIcons.house_fill),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(CupertinoIcons.plus_square_fill_on_square_fill),
+                label: 'Create',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.collections_bookmark),
+                label: 'My Posts',
+              ),
+              NavigationDestination(
+                icon: Icon(CupertinoIcons.person_crop_square_fill),
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
       ),
     );

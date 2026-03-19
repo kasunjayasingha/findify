@@ -21,15 +21,15 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     UserModel? user = widget.profileUser;
     return Scaffold(
+        backgroundColor: const Color(0xFFF3F4F6),
         appBar: AppBar(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
           title: Text(
             'Profile',
             style: GoogleFonts.poppins(
-              fontSize: 25, // Set the font size
+              fontSize: 26,
               fontWeight: FontWeight.bold,
-              // Set the font weight
+              letterSpacing: -0.5,
+              color: const Color(0xFFFF7B00),
             ),
           ),
         ),
@@ -72,13 +72,21 @@ class _ProfilePageState extends State<ProfilePage> {
                                             child: Container(
                                               width: 140, // Size of the image (matching CircleAvatar's radius * 2)
                                               height: 140,
-                                              padding: const EdgeInsets.all(2),
+                                              padding: const EdgeInsets.all(4), // slightly thicker gap
                                               decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
+                                                color: Colors.white, // inner ring
                                                 border: Border.all(
-                                                  width: 4,
-                                                  color: Colors.black,
+                                                  width: 3,
+                                                  color: const Color(0xFFFF7B00), // Our vibrant orange
                                                 ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: const Color(0xFFFF7B00).withOpacity(0.3),
+                                                    blurRadius: 15,
+                                                    offset: const Offset(0, 5),
+                                                  ),
+                                                ],
                                                 // Set shape to rectangle
                                                 // 50% border radius makes it circular
                                                 image: DecorationImage(
@@ -99,15 +107,21 @@ class _ProfilePageState extends State<ProfilePage> {
                                             },
                                             child: Container(
 
-                                              padding: const EdgeInsets.all(2),
-                                              decoration: const BoxDecoration(
-                                                  color: Colors.white,
-                                                  shape: BoxShape.circle
+                                              padding: const EdgeInsets.all(3),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withOpacity(0.1),
+                                                    blurRadius: 5,
+                                                    offset: const Offset(0, 3),
+                                                  ),
+                                                ]
                                               ),
                                               child: const CircleAvatar(
                                                 radius: 14,
-
-                                                backgroundColor: Colors.black,
+                                                backgroundColor: Color(0xFFFF7B00),
                                                 child: Icon(Icons.add, size: 20, color: Colors.white,),
                                               ),
                                             ),
@@ -115,8 +129,23 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ]
                                     ),
                                     const SizedBox(height: 24),
-                                    // Displaying user fields in a list manner
-                                    Row(
+                                    Container(
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(24),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.04),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          // Displaying user fields in a list manner
+                                          Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
@@ -292,7 +321,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 26),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 30),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
@@ -301,20 +333,26 @@ class _ProfilePageState extends State<ProfilePage> {
                                             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Login()));
                                           },
                                           child: Container(
-                                            width: MediaQuery.of(context).size.width*0.4,
-                                            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 13),
+                                            width: MediaQuery.of(context).size.width * 0.5,
+                                            padding: const EdgeInsets.symmetric(vertical: 16),
                                             decoration: BoxDecoration(
-                                                color: const Color(0xffcd040a),
-                                                borderRadius: BorderRadius.circular(30)
+                                              color: const Color(0xFFEF4444),
+                                              borderRadius: BorderRadius.circular(30),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFFEF4444).withOpacity(0.3),
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, 5),
+                                                ),
+                                              ],
                                             ),
-                                            child: const Center(
+                                            child: Center(
                                               child: Text(
                                                 "Log Out",
-                                                style: TextStyle(
+                                                style: GoogleFonts.inter(
                                                     color: Colors.white,
-                                                    fontSize: 24,
+                                                    fontSize: 20,
                                                     fontWeight: FontWeight.bold,
-                                                    fontFamily: 'Inter'
                                                 ),
                                               ),
                                             ),
