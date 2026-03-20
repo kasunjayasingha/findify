@@ -7,6 +7,8 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../post_model.dart';
 import '../user_model.dart';
 import '../view/profile.dart';
+import '../view/chat_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 
 class PostTile extends StatefulWidget {
@@ -108,15 +110,29 @@ class _PostTileState extends State<PostTile> {
                           child: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFFFF7B00), width: 2),
+                              border: Border.all(
+                                color: const Color(0xFFFF7B00),
+                                width: 2,
+                              ),
                             ),
                             child: CircleAvatar(
                               radius: 22,
-                              backgroundImage: user?.imgUrl != null && user!.imgUrl.toString().isNotEmpty
-                                  ? (user.imgUrl!.toString().startsWith('data:image') 
-                                      ? MemoryImage(base64Decode(user.imgUrl!.split(',').last)) 
-                                      : NetworkImage(user.imgUrl!)) as ImageProvider
-                                  : const AssetImage("images/default_profile.png")
+                              backgroundImage:
+                                  user?.imgUrl != null &&
+                                      user!.imgUrl.toString().isNotEmpty
+                                  ? (user.imgUrl!.toString().startsWith(
+                                              'data:image',
+                                            )
+                                            ? MemoryImage(
+                                                base64Decode(
+                                                  user.imgUrl!.split(',').last,
+                                                ),
+                                              )
+                                            : NetworkImage(user.imgUrl!))
+                                        as ImageProvider
+                                  : const AssetImage(
+                                          "../images/default_profile.png",
+                                        )
                                         as ImageProvider,
                               backgroundColor: Colors.grey.shade200,
                             ),
@@ -163,29 +179,54 @@ class _PostTileState extends State<PostTile> {
                     ),
                     if (widget.deleteOption)
                       IconButton(
-                        icon: const Icon(Icons.more_horiz, color: Color(0xFF9CA3AF)),
+                        icon: const Icon(
+                          Icons.more_horiz,
+                          color: Color(0xFF9CA3AF),
+                        ),
                         onPressed: () {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                              title: Text("Delete Post", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                              content: Text("Are you sure you want to delete this post?", style: GoogleFonts.inter()),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              title: Text(
+                                "Delete Post",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              content: Text(
+                                "Are you sure you want to delete this post?",
+                                style: GoogleFonts.inter(),
+                              ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: Text("Cancel", style: GoogleFonts.inter(color: Colors.grey.shade600)),
+                                  child: Text(
+                                    "Cancel",
+                                    style: GoogleFonts.inter(
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
                                 ),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.redAccent,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
                                   onPressed: () async {
                                     Navigator.pop(context);
                                     await deletePost();
                                   },
-                                  child: Text("Delete", style: GoogleFonts.inter(color: Colors.white)),
+                                  child: Text(
+                                    "Delete",
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -198,9 +239,14 @@ class _PostTileState extends State<PostTile> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: widget.post.type == 'LOST' ? Colors.red.shade100 : Colors.green.shade100,
+                        color: widget.post.type == 'LOST'
+                            ? Colors.red.shade100
+                            : Colors.green.shade100,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -208,13 +254,27 @@ class _PostTileState extends State<PostTile> {
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: widget.post.type == 'LOST' ? Colors.red.shade700 : Colors.green.shade700,
+                          color: widget.post.type == 'LOST'
+                              ? Colors.red.shade700
+                              : Colors.green.shade700,
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
+                if (widget.post.postCode.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4.0),
+                    child: Text(
+                      widget.post.postCode,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFFF7B00),
+                      ),
+                    ),
+                  ),
                 Text(
                   widget.post.description,
                   style: GoogleFonts.inter(
@@ -241,6 +301,115 @@ class _PostTileState extends State<PostTile> {
                             fit: BoxFit.cover,
                           ),
                   ),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (widget.post.userId !=
+                        FirebaseAuth.instance.currentUser?.uid)
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF7B00),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          final currentUser = FirebaseAuth.instance.currentUser;
+                          if (currentUser == null) return;
+
+                          final chatId =
+                              "${widget.post.postId}_${currentUser.uid}";
+                          final chatTitle = widget.post.postCode.isNotEmpty
+                              ? widget.post.postCode
+                              : (widget.post.description.length > 20
+                                    ? '${widget.post.description.substring(0, 20)}...'
+                                    : widget.post.description);
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatScreen(
+                                chatId: chatId,
+                                postId: widget.post.postId,
+                                postTitle: chatTitle,
+                                otherUserId: widget.post.userId,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline, size: 20),
+                        label: Text(
+                          "Message",
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    if (widget.deleteOption &&
+                        widget.post.userId ==
+                            FirebaseAuth.instance.currentUser?.uid &&
+                        widget.post.status == 'ACTIVE')
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade200,
+                          foregroundColor: Colors.black87,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () async {
+                          await FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(widget.post.postId)
+                              .update({'status': 'RESOLVED'});
+
+                          var chatSnap = await FirebaseFirestore.instance
+                              .collection('chats')
+                              .where('postId', isEqualTo: widget.post.postId)
+                              .get();
+                          for (var doc in chatSnap.docs) {
+                            await doc.reference.update({
+                              'postStatus': 'RESOLVED',
+                            });
+                          }
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Post marked as resolved!"),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.check_circle_outline, size: 20),
+                        label: Text(
+                          "Mark as Resolved",
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    if (widget.post.status == 'RESOLVED')
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          "Resolved",
+                          style: GoogleFonts.inter(
+                            color: Colors.green.shade800,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 8),
               ],
             ),

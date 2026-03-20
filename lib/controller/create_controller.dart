@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
+import 'dart:math';
 
 class CreateController with ChangeNotifier {
   final picker = ImagePicker();
@@ -187,6 +188,10 @@ class CreateController with ChangeNotifier {
     try {
       String postId = FirebaseFirestore.instance.collection("posts").doc().id;
 
+      final rnd = Random();
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      String code = "FND-${String.fromCharCodes(Iterable.generate(6, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))))}";
+
       await FirebaseFirestore.instance.collection("posts").doc(postId).set({
         'postId': postId,
         'userId': userID,
@@ -194,6 +199,8 @@ class CreateController with ChangeNotifier {
         'description': description,
         'location': location,
         'imageUrl': imageURL,
+        'status': 'ACTIVE',
+        'postCode': code,
         'createdAt': DateTime.now().toIso8601String(),
       });
 

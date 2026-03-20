@@ -6,6 +6,8 @@ class PostModel {
   String location;
   String imageUrl;
   DateTime createdAt;
+  String status;
+  String postCode;
 
   PostModel({
     required this.postId,
@@ -15,6 +17,8 @@ class PostModel {
     required this.location,
     required this.imageUrl,
     required this.createdAt,
+    this.status = 'ACTIVE',
+    this.postCode = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -25,6 +29,8 @@ class PostModel {
     "location": location,
     "imageUrl": imageUrl,
     "createdAt": createdAt.toIso8601String(),
+    "status": status,
+    "postCode": postCode,
   };
 
   factory PostModel.fromJson(Map<String, dynamic> json) => PostModel(
@@ -37,5 +43,7 @@ class PostModel {
     createdAt: json["createdAt"] != null
         ? DateTime.parse(json["createdAt"])
         : DateTime.now(),
+    status: json["status"] ?? 'ACTIVE',
+    postCode: json["postCode"] ?? '',
   );
 }

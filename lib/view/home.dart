@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:findify_new_demo/post_model.dart';
 import 'package:findify_new_demo/widget/post_tile.dart';
+import 'package:findify_new_demo/view/inbox.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -35,6 +36,14 @@ class _HomeState extends State<Home> {
             color: const Color(0xFFFF7B00),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.mail_outline_rounded, color: Color(0xFFFF7B00), size: 28,),
+            onPressed: () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const InboxScreen()));
+            },
+          )
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60.0),
           child: Padding(
@@ -78,7 +87,7 @@ class _HomeState extends State<Home> {
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection("posts")
-            .orderBy("createdAt", descending: true)
+            .where('status', isEqualTo: 'ACTIVE')
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -95,8 +104,15 @@ class _HomeState extends State<Home> {
           }
 
           if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+            var allDocs = snapshot.data!.docs.toList();
+            allDocs.sort((a, b) {
+               final dateA = DateTime.tryParse((a.data() as Map<String, dynamic>)['createdAt']?.toString() ?? '') ?? DateTime.now();
+               final dateB = DateTime.tryParse((b.data() as Map<String, dynamic>)['createdAt']?.toString() ?? '') ?? DateTime.now();
+               return dateB.compareTo(dateA); // descending
+            });
+
             // Filter posts containing the search query as a substring
-            final filteredPosts = snapshot.data!.docs.where((doc) {
+            final filteredPosts = allDocs.where((doc) {
               final description = (doc.data() as Map<String, dynamic>)['description']?.toString().toLowerCase() ?? '';
               final location = (doc.data() as Map<String, dynamic>)['location']?.toString().toLowerCase() ?? '';
               return description.contains(_searchQuery) || location.contains(_searchQuery);
