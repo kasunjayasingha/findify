@@ -50,6 +50,26 @@ class _LoginState extends State<Login> {
             ),
           ),
         );
+      } else if (e.code == 'invalid-credential') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.orangeAccent,
+            content: Text(
+              "Invalid credentials provided",
+              style: TextStyle(fontSize: 18, fontFamily: 'Inter'),
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.orangeAccent,
+            content: Text(
+              e.message ?? "An error occurred during login",
+              style: const TextStyle(fontSize: 18, fontFamily: 'Inter'),
+            ),
+          ),
+        );
       }
     }
   }
@@ -98,6 +118,11 @@ class _LoginState extends State<Login> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please Enter Email';
+                          }
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(value)) {
+                            return 'Please Enter a Valid Email';
                           }
                           return null;
                         },
@@ -157,11 +182,11 @@ class _LoginState extends State<Login> {
                       onTap: () {
                         if (_formkey.currentState!.validate()) {
                           setState(() {
-                            email = mailcontroller.text;
+                            email = mailcontroller.text.trim();
                             password = passwordcontroller.text;
                           });
+                          userLogin();
                         }
-                        userLogin();
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
