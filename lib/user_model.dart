@@ -5,6 +5,8 @@ class UserModel {
   final dynamic description;
   final dynamic phone;
   final dynamic id;
+  final dynamic address;
+  final dynamic createdAt;
 
   UserModel({
     required this.email,
@@ -13,16 +15,20 @@ class UserModel {
     required this.description,
     required this.phone,
     required this.id,
+    this.address = '',
+    this.createdAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       email: json['email'] ?? '',
       name: json['name'] ?? '',
-      imgUrl: json['imgUrl'] ?? '',
+      imgUrl: json['imgUrl'] ?? json['profileImageUrl'] ?? '',
       description: json['description'] ?? '',
       phone: json['phone'] ?? '',
-      id: json['id'] ?? '',
+      id: json['id'] ?? json['userId'] ?? '',
+      address: json['address'] ?? '',
+      createdAt: json['createdAt'],
     );
   }
 
@@ -30,10 +36,12 @@ class UserModel {
     return {
       'email': email,
       'name': name,
-      'imgUrl': imgUrl,
+      'profileImageUrl': imgUrl,
       'description': description,
       'phone': phone,
-      'id': id,
+      'userId': id,
+      'address': address,
+      'createdAt': createdAt ?? DateTime.now().toIso8601String(),
     };
   }
 }

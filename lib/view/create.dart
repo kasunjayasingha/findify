@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:findify_new_demo/controller/create_controller.dart';
 import 'package:provider/provider.dart';
 
@@ -132,7 +133,7 @@ class CreatePage extends StatelessWidget {
                             ),
                             maxLines: 3,
                             onChanged: (value) {
-                              provider.caption = value;
+                              provider.description = value;
                             },
                           ),
                         ),
@@ -165,12 +166,44 @@ class CreatePage extends StatelessWidget {
                             },
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: provider.type,
+                              isExpanded: true,
+                              icon: const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFF6B7280)),
+                              items: const [
+                                DropdownMenuItem(value: 'LOST', child: Text('Lost Item')),
+                                DropdownMenuItem(value: 'FOUND', child: Text('Found Item')),
+                              ],
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  provider.type = newValue;
+                                  provider.notifyListeners();
+                                }
+                              },
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 24),
                         Container(
                           width: double.infinity,
                           height: 300,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: provider.image == null ? Colors.grey.shade200 : Colors.white,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
@@ -179,16 +212,28 @@ class CreatePage extends StatelessWidget {
                                 offset: const Offset(0, 6),
                               ),
                             ],
-                            image: provider.image == null
-                                ? const DecorationImage(
-                              image: AssetImage("images/default_create.jpg"),
-                              fit: BoxFit.cover,
-                            )
-                                : DecorationImage(
-                              image: FileImage(File(provider.image!.path).absolute),
-                              fit: BoxFit.cover,
-                            ),
+                            image: provider.image != null
+                                ? DecorationImage(
+                                    image: kIsWeb 
+                                        ? NetworkImage(provider.image!.path) 
+                                        : FileImage(File(provider.image!.path).absolute) as ImageProvider,
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
                           ),
+                          child: provider.image == null
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.image_rounded, size: 80, color: Colors.grey.shade400),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      "Tap the camera button to add an image",
+                                      style: GoogleFonts.inter(color: Colors.grey.shade500, fontSize: 16),
+                                    ),
+                                  ],
+                                )
+                              : null,
                         ),
                         const SizedBox(height: 80), // Padding for the floating action button
                       ],

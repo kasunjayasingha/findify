@@ -1,18 +1,20 @@
-import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart'; // <--- Add this
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:convert';
 
 class CreateController with ChangeNotifier {
   final picker = ImagePicker();
-  String? caption;
+  String? description;
   String? location;
-  File? _image;
-  File? get image => _image;
+  String type = 'LOST'; // Default type
+  XFile? _image;
+  XFile? get image => _image;
   String imageURL = "";
   bool _isLoading = false;
 
@@ -29,12 +31,20 @@ class CreateController with ChangeNotifier {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
-        final directory = await getTemporaryDirectory();
-        final filePath = '${directory.path}/image.jpg';
-        final file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+        if (kIsWeb) {
+          _image = XFile.fromData(
+            response.bodyBytes,
+            name: "image.jpg",
+            mimeType: "image/jpeg",
+          );
+        } else {
+          final directory = await getTemporaryDirectory();
+          final filePath = '${directory.path}/image.jpg';
+          final file = File(filePath);
+          await file.writeAsBytes(response.bodyBytes);
+          _image = XFile(filePath);
+        }
 
-        _image = file;
         imageURL = url;
         notifyListeners();
       } else {
@@ -46,19 +56,29 @@ class CreateController with ChangeNotifier {
   }
 
   Future<void> pickGalleryImage(BuildContext context) async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 100);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery, 
+      imageQuality: 30, 
+      maxWidth: 800, 
+      maxHeight: 800,
+    );
 
     if (pickedFile != null) {
-      _image = File(pickedFile.path);
+      _image = pickedFile;
       notifyListeners();
     }
   }
 
   Future<void> pickCameraImage(BuildContext context) async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera, imageQuality: 100);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.camera, 
+      imageQuality: 30, 
+      maxWidth: 800, 
+      maxHeight: 800,
+    );
 
     if (pickedFile != null) {
-      _image = File(pickedFile.path);
+      _image = pickedFile;
       notifyListeners();
     }
   }
@@ -143,67 +163,48 @@ class CreateController with ChangeNotifier {
     );
   }
 
-  Future<void> addPost(String userID) async {
-    if (caption == null || location == null || imageURL.isEmpty) {
-      throw Exception("All fields are required");
-    }
-
-    setLoading(true);
+  Future<void> uploadImage(XFile image) async {
     try {
-      String postId = FirebaseFirestore.instance.collection("Post").doc().id;
-
-      await FirebaseFirestore.instance.collection("Post").doc(postId).set({
-        'id': postId,
-        'user_id': userID,
-        'like_cnt': 0,
-        'comment_cnt': 0,
-        'share_cnt': 0,
-        'caption': caption,
-        'location': location,
-        'imgUrl': imageURL,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      final bytes = await image.readAsBytes();
+      String base64Image = base64Encode(bytes);
+      imageURL = "data:image/jpeg;base64,$base64Image";
+      print("Image converted to Base64 successfully");
     } catch (e) {
-      print("Error adding post: $e");
-      throw e;
-    } finally {
-      setLoading(false);
+      print("Error converting image: $e");
+      throw Exception("Image conversion failed");
     }
   }
 
-  Future<void> uploadImage(File image) async {
-    setLoading(true);
+  Future<void> addPost(String userID) async {
+    if (description == null ||
+        description!.isEmpty ||
+        location == null ||
+        location!.isEmpty ||
+        imageURL.isEmpty) {
+      throw Exception("All fields are required");
+    }
+
     try {
-      String cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
-      var uri = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/raw/upload");
-      var request = http.MultipartRequest("POST", uri);
-      var fileBytes = await image.readAsBytes();
-      var multipartFile = http.MultipartFile.fromBytes(
-        'file',
-        fileBytes,
-        filename: image.path.split("/").last,
-      );
+      String postId = FirebaseFirestore.instance.collection("posts").doc().id;
 
-      request.files.add(multipartFile);
-      request.fields['upload_preset'] = "preset-for-post-img-upload";
-      request.fields['resource_type'] = "raw";
-      var response = await request.send();
+      await FirebaseFirestore.instance.collection("posts").doc(postId).set({
+        'postId': postId,
+        'userId': userID,
+        'type': type,
+        'description': description,
+        'location': location,
+        'imageUrl': imageURL,
+        'createdAt': DateTime.now().toIso8601String(),
+      });
 
-      var responseBody = await response.stream.bytesToString();
-      var jsonResponse = jsonDecode(responseBody);
-      String imgUrl = jsonResponse["secure_url"];
-
-      if (response.statusCode == 200) {
-        print("Uploaded successfully");
-        imageURL = imgUrl;
-      } else {
-        print("Upload failed with status: ${response.statusCode}");
-      }
+      // Reset fields on success
+      description = null;
+      location = null;
+      _image = null;
+      imageURL = "";
     } catch (e) {
-      print("Error uploading image: $e");
-      throw e;
-    } finally {
-      setLoading(false);
+      print("Error adding post: $e");
+      throw Exception("Failed to add post to Firestore");
     }
   }
 }

@@ -1,54 +1,62 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:convert';
 
 class ProfileController with ChangeNotifier{
   CollectionReference ref = FirebaseFirestore.instance.collection('User');
   User? user = FirebaseAuth.instance.currentUser;
 
   final picker = ImagePicker();
-  File? _image;
-  File? get image => _image;
+  XFile? _image;
+  XFile? get image => _image;
   String imageURL = "";
   String name = "";
-  String phone = "";
-  String description = "";
+  String address = "";
 
   Future pickGalleryImage(BuildContext context) async{
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 100);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery, 
+      imageQuality: 30,
+      maxWidth: 800,
+      maxHeight: 800,
+    );
 
     if(pickedFile != null){
-      _image = File(pickedFile.path);
-      uploadImage(_image!);
+      _image = pickedFile;
+      await uploadImage(_image!);
       notifyListeners();
     }
   }
 
   Future pickCameraImage(BuildContext context) async{
-    final pickedFile = await picker.pickImage(source: ImageSource.camera, imageQuality: 100);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.camera, 
+      imageQuality: 30,
+      maxWidth: 800,
+      maxHeight: 800,
+    );
 
     if(pickedFile != null){
-      _image = File(pickedFile.path);
-      uploadImage(_image!);
+      _image = pickedFile;
+      await uploadImage(_image!);
       notifyListeners();
     }
   }
-
 
   void pickImage(context){
     showDialog(
         context: context,
         builder: (BuildContext context){
           return AlertDialog(
-            content: Container(
+            content: SizedBox(
               height: 200,
               child: Column(
                 children: [
@@ -57,23 +65,23 @@ class ProfileController with ChangeNotifier{
                       pickCameraImage(context);
                       Navigator.pop(context);
                     },
-                    leading: Icon(Icons.camera, color: Colors.black,),
-                    title: Text("Camera"),
+                    leading: const Icon(Icons.camera, color: Colors.black,),
+                    title: const Text("Camera"),
                   ),
                   ListTile(
                     onTap: (){
                       pickGalleryImage(context);
                       Navigator.pop(context);
                     },
-                    leading: Icon(Icons.photo_library, color: Colors.black,),
-                    title: Text("Gallery"),
+                    leading: const Icon(Icons.photo_library, color: Colors.black,),
+                    title: const Text("Gallery"),
                   ),
                   ListTile(
                     onTap: (){
                       _showURLInputDialog(context);
                     },
-                    leading: Icon(Icons.link, color: Colors.black,),
-                    title: Text("Image URL"),
+                    leading: const Icon(Icons.link, color: Colors.black,),
+                    title: const Text("Image URL"),
                     subtitle: Text(imageURL.isNotEmpty? "Link added":"No URL provided",
                       style: const TextStyle(color: Colors.grey),
                     ),
@@ -85,6 +93,33 @@ class ProfileController with ChangeNotifier{
         }
     );
   }
+
+  Future<void> setImageFromUrl(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        if (kIsWeb) {
+          _image = XFile.fromData(response.bodyBytes, name: "image.jpg", mimeType: "image/jpeg");
+        } else {
+          final directory = await getTemporaryDirectory();
+          final filePath = '${directory.path}/image.jpg';
+          final file = File(filePath);
+          await file.writeAsBytes(response.bodyBytes);
+          _image = XFile(filePath);
+        }
+
+        imageURL = url;
+        changeData(imageURL, "profileImageUrl");
+        notifyListeners();
+      } else {
+        throw Exception('Failed to load image');
+      }
+    } catch (e) {
+      print('Error downloading image: $e');
+    }
+  }
+
   void _showURLInputDialog(BuildContext context) {
     final TextEditingController urlController = TextEditingController();
 
@@ -103,15 +138,15 @@ class ProfileController with ChangeNotifier{
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog without saving
+                Navigator.pop(context);
               },
               child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
                 imageURL = urlController.text;
-                changeData(imageURL, "imgUrl");// Save input to the variable
-                Navigator.pop(context); // Close dialog
+                setImageFromUrl(imageURL);
+                Navigator.pop(context);
               },
               child: const Text("Save"),
             ),
@@ -120,6 +155,7 @@ class ProfileController with ChangeNotifier{
       },
     );
   }
+
   void showUsernameDialog(BuildContext context) {
     final TextEditingController urlController = TextEditingController();
 
@@ -133,20 +169,20 @@ class ProfileController with ChangeNotifier{
             decoration: const InputDecoration(
               hintText: "Name",
             ),
-            keyboardType: TextInputType.url,
+            keyboardType: TextInputType.name,
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog without saving
+                Navigator.pop(context);
               },
               child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
                 name = urlController.text;
-                changeData(name, "name");// Save input to the variable
-                Navigator.pop(context); // Close dialog
+                changeData(name, "name");
+                Navigator.pop(context);
               },
               child: const Text("Save"),
             ),
@@ -155,33 +191,34 @@ class ProfileController with ChangeNotifier{
       },
     );
   }
-  void showPhoneDialog(BuildContext context) {
+
+  void showAddressDialog(BuildContext context) {
     final TextEditingController urlController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Enter Phone No"),
+          title: const Text("Enter Address"),
           content: TextField(
             controller: urlController,
             decoration: const InputDecoration(
-              hintText: "Phone No",
+              hintText: "Address",
             ),
-            keyboardType: TextInputType.url,
+            keyboardType: TextInputType.streetAddress,
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog without saving
+                Navigator.pop(context);
               },
               child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
-                phone = urlController.text;
-                changeData(phone, "phone");// Save input to the variable
-                Navigator.pop(context); // Close dialog
+                address = urlController.text;
+                changeData(address, "address");
+                Navigator.pop(context);
               },
               child: const Text("Save"),
             ),
@@ -190,99 +227,40 @@ class ProfileController with ChangeNotifier{
       },
     );
   }
-  void showDescriptionDialog(BuildContext context) {
-    final TextEditingController urlController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Enter Description"),
-          content: TextField(
-            controller: urlController,
-            decoration: const InputDecoration(
-              hintText: "Description",
-            ),
-            keyboardType: TextInputType.url,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog without saving
-              },
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                description = urlController.text;
-                changeData(description, "description");// Save input to the variable
-                Navigator.pop(context); // Close dialog
-              },
-              child: const Text("Save"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-  void changeData(String value, String doc) async {
+  void changeData(String value, String docField) async {
     try {
-      // Fetch the user document
       QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
           .collection("User")
-          .where("id", isEqualTo: user?.uid) // Assuming "id" is the user's unique identifier
+          .where("userId", isEqualTo: user?.uid)
           .get();
 
       if (snapshot.docs.isNotEmpty) {
-        // Get the first document
         var userDoc = snapshot.docs.first;
-
-        // Update the image URL
         await FirebaseFirestore.instance
             .collection("User")
-            .doc(userDoc.id) // Use the document ID to perform the update
-            .update({doc: value});
+            .doc(userDoc.id)
+            .update({docField: value});
 
-        debugPrint("Image URL updated successfully!");
+        debugPrint("$docField updated successfully!");
       } else {
         debugPrint("No user document found.");
       }
     } catch (e) {
-      debugPrint("Error updating image URL: $e");
+      debugPrint("Error updating $docField: $e");
     }
   }
 
-  Future<void> uploadImage(File image) async {
-    File? file = image;
-    String cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
-    var uri = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/raw/upload");
-    var request = http.MultipartRequest("POST", uri);
-    var fileBytes = await file.readAsBytes();
-    var multipartFile = http.MultipartFile.fromBytes(
-      'file',
-      fileBytes,
-      filename: file.path.split("/").last,
-    );
-
-    request.files.add(multipartFile);
-    request.fields['upload_preset'] = "preset-for-file-upload";
-    request.fields['resource_type'] = "raw";
-    var response = await request.send();
-
-    var responseBody = await response.stream.bytesToString();
-    print(responseBody);
-    var jsonResponse = jsonDecode(responseBody);
-    String imgUrl = jsonResponse["secure_url"];
-
-    if(response.statusCode == 200){
-      print("Uploaded succesfully");
-      changeData(imgUrl, "imgUrl");
-      return;
-    }else{
-      print("Uploaded failed with status: ${response.statusCode}");
-      return;
+  Future<void> uploadImage(XFile image) async {
+    try {
+      final bytes = await image.readAsBytes();
+      String base64Image = base64Encode(bytes);
+      String downloadUrl = "data:image/jpeg;base64,$base64Image";
+      
+      changeData(downloadUrl, "profileImageUrl");
+    } catch (e) {
+      debugPrint("Error converting image: $e");
     }
   }
-
-
 }
+

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:findify_new_demo/components/post.dart';
+import 'package:findify_new_demo/post_model.dart';
 import 'package:findify_new_demo/widget/post_tile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -58,7 +58,7 @@ class _MyPostsPageState extends State<MyPostsPage> {
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
+                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -89,8 +89,11 @@ class _MyPostsPageState extends State<MyPostsPage> {
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
-            .collection("Post")
-            .where("user_id", isEqualTo: currentUser.uid)
+            .collection("posts")
+            .where("userId", isEqualTo: currentUser.uid)
+            // Note: If an inequality filter or orderBy is suddenly broken because of missing indexes, 
+            // you might need to create an index in Firebase console. So we remove orderBy to simplify query if index issue occurs, 
+            // but the posts can just be fetched and we map them to widgets.
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -108,9 +111,19 @@ class _MyPostsPageState extends State<MyPostsPage> {
 
           if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
             // Filter posts containing the search query as a substring
-            final filteredPosts = snapshot.data!.docs.where((doc) {
-              final caption = (doc['caption'] as String).toLowerCase();
-              return caption.contains(_searchQuery);
+            var allDocs = snapshot.data!.docs.toList();
+            
+            // Sort by createdAt in memory since composite index might not exist
+            allDocs.sort((a, b) {
+               final dateA = DateTime.tryParse((a.data() as Map<String, dynamic>)['createdAt']?.toString() ?? '') ?? DateTime.now();
+               final dateB = DateTime.tryParse((b.data() as Map<String, dynamic>)['createdAt']?.toString() ?? '') ?? DateTime.now();
+               return dateB.compareTo(dateA); // descending
+            });
+
+            final filteredPosts = allDocs.where((doc) {
+              final description = (doc.data() as Map<String, dynamic>)['description']?.toString().toLowerCase() ?? '';
+              final location = (doc.data() as Map<String, dynamic>)['location']?.toString().toLowerCase() ?? '';
+              return description.contains(_searchQuery) || location.contains(_searchQuery);
             }).toList();
 
             if (filteredPosts.isNotEmpty) {
@@ -119,7 +132,7 @@ class _MyPostsPageState extends State<MyPostsPage> {
                 itemCount: filteredPosts.length,
                 itemBuilder: (context, index) {
                   final postData = filteredPosts[index].data() as Map<String, dynamic>;
-                  Post post = Post.fromJson(postData);
+                  PostModel post = PostModel.fromJson(postData);
                   return PostTile(post: post, deleteOption: true,);
                 },
               );

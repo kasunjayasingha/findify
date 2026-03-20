@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:findify_new_demo/components/post.dart';
+import 'package:findify_new_demo/post_model.dart';
 import 'package:findify_new_demo/widget/post_tile.dart';
 
 class Home extends StatefulWidget {
@@ -77,7 +77,7 @@ class _HomeState extends State<Home> {
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
-            .collection("Post")
+            .collection("posts")
             .orderBy("createdAt", descending: true)
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -97,8 +97,9 @@ class _HomeState extends State<Home> {
           if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
             // Filter posts containing the search query as a substring
             final filteredPosts = snapshot.data!.docs.where((doc) {
-              final caption = (doc['caption'] as String).toLowerCase();
-              return caption.contains(_searchQuery);
+              final description = (doc.data() as Map<String, dynamic>)['description']?.toString().toLowerCase() ?? '';
+              final location = (doc.data() as Map<String, dynamic>)['location']?.toString().toLowerCase() ?? '';
+              return description.contains(_searchQuery) || location.contains(_searchQuery);
             }).toList();
 
             if (filteredPosts.isNotEmpty) {
@@ -107,7 +108,7 @@ class _HomeState extends State<Home> {
                 itemCount: filteredPosts.length,
                 itemBuilder: (context, index) {
                   final postData = filteredPosts[index].data() as Map<String, dynamic>;
-                  Post post = Post.fromJson(postData);
+                  PostModel post = PostModel.fromJson(postData);
                   return PostTile(post: post);
                 },
               );

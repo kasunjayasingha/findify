@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +8,9 @@ import 'package:findify_new_demo/authentication/login.dart';
 import 'package:findify_new_demo/controller/profile_controller.dart';
 import 'package:findify_new_demo/user_model.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:convert';
+import 'dart:convert';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.profileUser});
@@ -45,7 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         StreamBuilder(
                           stream: FirebaseFirestore.instance
                               .collection("User")
-                              .where("id", isEqualTo: user?.id)
+                              .where("userId", isEqualTo: user?.id)
                               .snapshots(),
                           builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -91,12 +95,16 @@ class _ProfilePageState extends State<ProfilePage> {
                                                 // 50% border radius makes it circular
                                                 image: DecorationImage(
                                                   image: provider.image == null
-                                                      ? userDoc['imgUrl'] == ""
+                                                      ? ((userDoc.data() as Map<String, dynamic>).containsKey('profileImageUrl') ? userDoc['profileImageUrl'] == "" || userDoc['profileImageUrl'] == null : userDoc['imgUrl'] == "" || userDoc['imgUrl'] == null)
                                                       ? const AssetImage("images/default_profile.png")
-                                                      : NetworkImage(userDoc['imgUrl']) as ImageProvider
-                                                      : FileImage(File(provider.image!.path).absolute),
+                                                      : (((userDoc.data() as Map<String, dynamic>).containsKey('profileImageUrl') ? userDoc['profileImageUrl'] : userDoc['imgUrl']).toString().startsWith('data:image') 
+                                                          ? MemoryImage(base64Decode(((userDoc.data() as Map<String, dynamic>).containsKey('profileImageUrl') ? userDoc['profileImageUrl'] : userDoc['imgUrl']).toString().split(',').last)) as ImageProvider
+                                                          : NetworkImage(((userDoc.data() as Map<String, dynamic>).containsKey('profileImageUrl') ? userDoc['profileImageUrl'] : userDoc['imgUrl']).toString()) as ImageProvider)
+                                                      : kIsWeb
+                                                          ? NetworkImage(provider.image!.path)
+                                                          : FileImage(File(provider.image!.path).absolute) as ImageProvider,
 
-                                                  fit: BoxFit.contain, // Ensures the image is contained within the box
+                                                  fit: BoxFit.cover, // Ensures the image is contained within the box
                                                 ),
                                               ),
                                             ),
@@ -240,7 +248,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         Expanded(
                                           flex: 3,
                                           child: Text(
-                                            "Phone",
+                                            "Address",
                                             style: GoogleFonts.inter(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,
@@ -252,7 +260,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         Expanded(
                                           flex: 8,
                                           child: Text(
-                                            userDoc['phone'] ?? 'N/A',
+                                            userDoc.data().toString().contains('address') ? userDoc['address'] ?? 'N/A' : 'N/A',
                                             style: GoogleFonts.inter(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
@@ -264,7 +272,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         Expanded(
                                             child: GestureDetector(
                                               onTap: (){
-                                                provider.showPhoneDialog(context);
+                                                provider.showAddressDialog(context);
                                               },
                                               child: Icon(
                                                 Icons.arrow_forward_ios,
@@ -272,53 +280,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                               ),
                                             )
                                         )
-                                      ],
-                                    ),
-                                    const SizedBox(height: 26),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            "Description",
-                                            style: GoogleFonts.inter(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.grey.shade500
-                                            ),
-                                          ),
-
-                                        ),
-                                        Expanded(
-                                          flex: -1,
-                                          child: GestureDetector(
-                                            onTap: (){
-                                              provider.showDescriptionDialog(context);
-                                            },
-                                            child: Icon(
-                                              Icons.arrow_forward_ios,
-                                              color: Colors.grey.shade400,
-                                            ),
-                                          ),
-
-                                        )
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 8,
-                                          child: Text(
-                                            userDoc['description'] ?? 'N/A',
-                                            style: GoogleFonts.inter(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.black
-                                            ),
-                                          ),
-
-                                        ),
                                       ],
                                     ),
                                         ],
@@ -329,8 +290,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         GestureDetector(
-                                          onTap: (){
-                                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Login()));
+                                          onTap: () async {
+                                            await FirebaseAuth.instance.signOut();
+                                            if (context.mounted) {
+                                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Login()));
+                                            }
                                           },
                                           child: Container(
                                             width: MediaQuery.of(context).size.width * 0.5,
